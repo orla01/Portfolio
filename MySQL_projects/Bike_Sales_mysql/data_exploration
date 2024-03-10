@@ -1,0 +1,91 @@
+USE bikedb;
+
+-- Basic retrieval: Retrieve the names of all product categories.
+SELECT DISTINCT
+	category_name
+FROM 
+	categories;
+
+-- Join operations: Display the details of all orders, including customer information (first and last names) and the status of the order.
+-- this query provides a summary of orders, including customer names, order details, and a count of unique products for each order.
+SELECT 
+	  customers.first_name,
+    customers.last_name,
+	  orders.order_id,
+    products.product_name,
+    orders.order_date,
+    COUNT(order_items.product_id) AS total_items
+FROM orders
+INNER JOIN customers ON customers.customer_id = orders.customer_id
+INNER JOIN order_items ON order_items.order_id = orders.order_id
+INNER JOIN products ON products.product_id = order_items.order_id
+GROUP BY orders.order_id, products.product_id;
+
+-- Calculate the total quantity of each product sold (sum of quantities in order_items).
+-- this query provides a summary of products, showing their ID, name, and the total quantity sold, with results sorted by product ID.
+
+SELECT 
+	  order_items.product_id,
+    products.product_name,
+	  SUM(order_items.quantity) AS total_quantity_sold
+FROM order_items
+LEFT JOIN products ON products.product_id = order_items.product_id
+GROUP BY order_items.product_id
+ORDER BY order_items.product_id ASC;
+
+-- List the names of customers who have placed orders, sorted alphabetically by their last names.
+
+SELECT 
+  	customers.first_name,
+    customers.last_name
+FROM customers
+INNER JOIN orders ON orders.customer_id = customers.customer_id
+ORDER BY customers.last_name;
+
+
+-- The top 5 products based on their 'list_price,' with the highest prices coming first
+-- the entire query is asking for the top N products based on their 'list_price,' with the highest prices coming first. If there is tie, it assigns the same rank.
+
+SELECT * 
+FROM (
+    SELECT
+        product_id,
+        product_name,
+        list_price,
+        DENSE_RANK() OVER (ORDER BY list_price DESC) AS rank_of_product
+    FROM products
+) ranked_products
+WHERE rank_of_product <= 5; 
+
+-- Retrieve the names of customers who have placed orders, along with the total number of orders each customer has placed.
+
+SELECT 
+	  customers.customer_id,
+    customers.first_name,
+    customers.last_name,
+    COUNT(orders.order_id) AS total_orders
+FROM customers
+INNER JOIN orders ON orders.customer_id = customers.customer_id
+GROUP BY customers.customer_id;
+
+-- List the products that are out of stock (quantity = 0) in each store.
+-- This query will provide you with a list of products that are currently out of stock (quantity = 0) in each store.
+SELECT 
+	  stocks.store_id,
+    stocks.product_id,
+    products.product_name,
+    stocks.quantity
+FROM stocks
+INNER JOIN products ON products.product_id = stocks.product_id
+WHERE quantity = 0;
+
+-- Identify orders that were shipped late (shipped_date is after the required_date).
+-- This query provides you with a list of orders that were shipped late
+SELECT 
+	  order_id,
+    customer_id,
+    required_date,
+    shipped_date,
+    CASE WHEN shipped_date > required_date THEN "Late" ELSE "Not Late" END AS late_shipment
+FROM orders
+WHERE CASE WHEN shipped_date > required_date THEN "Late" ELSE "Not Late" END = "Late";

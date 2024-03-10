@@ -1,0 +1,111 @@
+CREATE DATABASE bikeDb;
+
+USE bikeDb;
+
+
+-- Database Schema for Bike Store Relational Database
+-- This script defines the tables and relationships for a Bike Store database.
+-- Tables include information about orders, customers, products, staff, stores, order_items, categories, stocks, brands.
+
+-- Table to store information about product categories
+CREATE TABLE categories(
+	category_id TINYINT PRIMARY KEY NOT NULL, -- Unique identifier for each category
+    category_name VARCHAR(50)
+);
+
+-- Table to store information about product brands
+CREATE TABLE brands(
+	brand_id TINYINT PRIMARY KEY NOT NULL, -- Unique identifier for each brand
+    brand_name VARCHAR(20) UNIQUE -- Unique name for each brand
+);
+
+-- Table to store information about stores
+CREATE TABLE stores(
+	store_id TINYINT PRIMARY KEY NOT NULL, -- Unique identifier for each store
+    store_name VARCHAR(20),
+    phone VARCHAR(14),
+    email VARCHAR(50),
+    street VARCHAR(50),
+    city VARCHAR(20),
+    state CHAR(2),
+    zip_code CHAR(5)
+);
+
+-- Table to store information about products
+CREATE TABLE products(
+	product_id INT PRIMARY KEY NOT NULL, -- Unique identifier for each product
+    product_name VARCHAR(100),
+    brand_id TINYINT NOT NULL, -- References the brand of the product
+    category_id TINYINT NOT NULL, -- References the category of the product
+    model_year YEAR,
+    list_price DECIMAL(10,2),
+	FOREIGN KEY (brand_id) REFERENCES brands(brand_id),
+	FOREIGN KEY (category_id) REFERENCES categories(category_id)
+);
+
+-- Table to store information about customers
+CREATE TABLE customers( 
+	customer_id INT PRIMARY KEY NOT NULL, -- Unique identifier for each customer
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    phone VARCHAR(14),
+    email VARCHAR(50),
+    street VARCHAR(50),
+    city VARCHAR(50),
+    state CHAR(2),
+    zip_code CHAR(5)
+);
+
+-- Table to store information about staff members
+CREATE TABLE staff(
+	staff_id TINYINT PRIMARY KEY NOT NULL, -- Unique identifier for each staff member
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(50),
+    phone VARCHAR(14),
+    active TINYINT,
+    store_id TINYINT NOT NULL, -- References the store where the staff member works
+    manager_id TINYINT NOT NULL, -- References the manager of the staff member
+    FOREIGN KEY (store_id) REFERENCES stores(store_id)
+);
+
+-- Table to store information about orders
+CREATE TABLE orders(
+	order_id INT PRIMARY KEY NOT NULL, -- Unique identifier for each order
+    customer_id INT NOT NULL, -- References the customer who placed the order
+    order_status INT CHECK (order_status >= 1 AND order_status <= 4), -- Represents the status of the order
+    order_date DATE,
+    required_date DATE,
+    shipped_date DATE,
+    store_id TINYINT NOT NULL, -- References the store where the order was placed
+    staff_id TINYINT NOT NULL, -- References the staff member associated with the order
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
+    FOREIGN KEY (store_id) REFERENCES stores(store_id),
+    FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
+);
+
+-- Table to store information about items within orders
+CREATE TABLE order_items(
+	order_id INT NOT NULL, -- References the order to which the item belongs
+    item_id TINYINT PRIMARY KEY NOT NULL, -- Unique identifier for each item in an order
+    product_id INT NOT NULL, -- References the product associated with the item
+    quantity INT,
+    list_price DECIMAL(10,2),
+    discount DECIMAL(5,2),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+-- Table to store information about product stocks in stores
+CREATE TABLE stocks(
+	store_id TINYINT NOT NULL, -- References the store where the product is stocked
+    product_id INT NOT NULL, -- References the product that is stocked
+    quantity INT NOT NULL, -- Represents the quantity of the product in stock
+    PRIMARY KEY(store_id, product_id),
+	FOREIGN KEY (store_id) REFERENCES stores(store_id),
+	FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+
+	
+

@@ -6,7 +6,7 @@ This repository contains the analysis of HR employee attrition using MySQL, Powe
 
 ## Project Structure
 
-- **Repository Name:** portfolio
+- **Repository Name:** Portfolio
   - **Folder Name:** MySQL_projects
     - **Subfolder Name:** HR_Analysis_mysql&powerbi
       - **Files:**

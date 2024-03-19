@@ -1,0 +1,179 @@
+USE lalemarket;
+
+-- Current month orders(transactions)
+SELECT 
+    COUNT(order_date) AS current_month_orders
+FROM 
+    sales
+WHERE 
+    DATE_FORMAT(order_date, '%Y-%m') = (
+        SELECT 
+            DATE_FORMAT(MAX(order_date), '%Y-%m')
+        FROM 
+            sales
+	);
+    
+-- Current month profit
+
+SELECT 
+ ROUND(SUM(sales.order_quantity * products.product_price) -
+ SUM(sales.order_quantity * products.product_cost),0) AS current_month_profit 
+FROM sales 
+INNER JOIN products ON products.product_id = sales.product_id 
+WHERE 
+    DATE_FORMAT(order_date, '%Y-%m') = (
+        SELECT 
+            DATE_FORMAT(MAX(order_date), '%Y-%m')
+        FROM 
+            sales
+);
+
+-- Current month returns(return transactions - not the quantity)
+SELECT 
+    count(return_date) AS current_month_returns
+FROM returns
+WHERE 
+    DATE_FORMAT(return_date, '%Y-%m') = (
+        SELECT 
+            DATE_FORMAT(MAX(return_date), '%Y-%m')
+        FROM 
+            returns
+	);
+
+-- Current month revenue
+
+SELECT 
+ ROUND(SUM(sales.order_quantity * products.product_price), 0) AS current_month_revenue 
+FROM sales 
+INNER JOIN products ON products.product_id = sales.product_id 
+WHERE 
+    DATE_FORMAT(order_date, '%Y-%m') = (
+        SELECT 
+            DATE_FORMAT(MAX(order_date), '%Y-%m')
+        FROM 
+            sales
+);
+
+-- Total active customers
+SELECT
+	COUNT(DISTINCT customer_id) AS total_active_customers
+FROM sales;
+
+-- Monthly revenue trending 
+
+SELECT 
+	YEAR(order_date) AS sales_year,
+	MONTHNAME(order_date) AS month_name,
+    ROUND(SUM(sales.order_quantity * products.product_price), 0) AS month_revenue
+FROM sales 
+INNER JOIN products ON products.product_id = sales.product_id
+GROUP BY YEAR(order_date),
+	MONTHNAME(order_date);
+    
+-- The most quantity sold product
+SELECT 
+	products.product_name
+FROM sales
+INNER JOIN products ON products.product_id = sales.product_id
+GROUP BY products.product_name
+ORDER BY SUM(sales.order_quantity) DESC
+LIMIT 1;
+
+-- The most returned product by quantity
+SELECT 
+	products.product_name
+FROM returns
+INNER JOIN products ON products.product_id = returns.product_id
+GROUP BY products.product_name
+ORDER BY SUM(returns.return_quantity) DESC
+LIMIT 1;
+
+
+-- Orders/transactions by countries 
+
+SELECT
+	stores.store_country,
+    COUNT(product_id) AS total_transactions
+FROM sales
+INNER JOIN stores ON stores.store_id = sales.store_id
+GROUP BY stores.store_country
+ORDER BY total_transactions DESC;
+
+
+-- Revenue by countries and cities
+
+SELECT
+	stores.store_country,
+	stores.store_city,
+    ROUND(SUM(sales.order_quantity * products.product_price), 0) AS revenue 
+FROM sales
+INNER JOIN stores ON stores.store_id = sales.store_id
+INNER JOIN products ON products.product_id = sales.product_id
+GROUP BY stores.store_country,
+		  stores.store_city
+ORDER BY stores.store_country DESC,
+		  revenue DESC;
+
+-- Top 50 customers by revenue
+
+SELECT
+	customers.customer_id,
+	CONCAT_WS(" ",customers.first_name, customers.last_name) AS Customer,
+	ROUND(SUM(sales.order_quantity * products.product_price), 0) AS Revenue 
+FROM sales
+INNER JOIN customers ON customers.customer_id = sales.customer_id
+INNER JOIN products ON products.product_id = sales.product_id
+GROUP BY customers.customer_id
+ORDER BY Revenue DESC
+LIMIT 50;
+
+-- Total customers by month 
+
+SELECT 
+    YEAR(order_date) AS sales_year,
+    MONTHNAME(order_date) AS month_name,
+    COUNT(DISTINCT customer_id) AS total_active_customers
+FROM 
+    sales 
+GROUP BY 
+    sales_year,
+    MONTH(order_date),
+    month_name
+ORDER BY 
+    sales_year,
+    MONTH(order_date);
+
+-- Total revenue by occupation
+SELECT
+	customers.occupation,
+    ROUND(SUM(sales.order_quantity * products.product_price), 0) AS revenue 
+FROM sales
+INNER JOIN customers ON customers.customer_id = sales.customer_id
+INNER JOIN products ON products.product_id = sales.product_id
+GROUP BY customers.occupation
+ORDER BY revenue DESC;
+
+-- Revenue by customers who has child/children and by country
+
+SELECT 
+    stores.store_country,
+    CASE WHEN customers.children > 0 THEN 'Y' ELSE 'N' END AS children,
+    ROUND(SUM(sales.order_quantity * products.product_price), 0) AS revenue 
+FROM 
+    sales
+INNER JOIN 
+    customers ON customers.customer_id = sales.customer_id
+INNER JOIN 
+    products ON products.product_id = sales.product_id
+INNER JOIN 
+    stores ON stores.store_id = sales.store_id
+GROUP BY 
+    stores.store_country,
+    CASE WHEN customers.children > 0 THEN 'Y' ELSE 'N' END
+ORDER BY 
+	stores.store_country DESC,
+    revenue DESC;
+
+
+
+

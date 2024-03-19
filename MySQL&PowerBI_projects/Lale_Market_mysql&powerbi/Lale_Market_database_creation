@@ -1,0 +1,80 @@
+CREATE DATABASE lalemarket;
+USE lalemarket;
+
+CREATE TABLE regions (
+    region_id INT PRIMARY KEY NOT NULL, -- Unique identifier for each region
+    sales_district VARCHAR(20),
+    sales_region VARCHAR(20)
+);
+
+CREATE TABLE stores (
+	store_id INT PRIMARY KEY NOT NULL, -- Unique identifier for each store
+    region_id INT NOT NULL,
+    store_type VARCHAR(50) NOT NULL,
+    store_name VARCHAR(10),
+    store_street_address VARCHAR(50),
+    store_city VARCHAR(50),
+    store_state VARCHAR(50),
+	store_country VARCHAR(50),
+    first_opened_date DATE,
+    last_remodel_date DATE,
+	FOREIGN KEY (region_id) REFERENCES regions(region_id)
+);
+    
+
+-- Table to store information about products:
+CREATE TABLE products(
+    product_id INT PRIMARY KEY NOT NULL, -- Unique identifier for each product
+    product_brand VARCHAR(50),
+    product_name VARCHAR(50),
+    product_sku CHAR(11),
+	product_price DECIMAL(10,2),
+    product_cost DECIMAL(10,2)
+);
+
+-- Table to store information about customers:
+CREATE TABLE customers( 
+    customer_id INT PRIMARY KEY NOT NULL, -- Unique identifier for each customer
+    cust_account_number CHAR(11),
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    address VARCHAR(100),
+    city VARCHAR(50),
+    state VARCHAR(50),
+    postal_code CHAR(5),
+    country VARCHAR(20),
+    birth_date DATE,
+    marital_status CHAR(1),
+    income VARCHAR(10),
+    gender CHAR(1),
+    children TINYINT,
+    education_level VARCHAR(50),
+    account_open_date DATE,
+    loyalty_card CHAR(6),
+    occupation VARCHAR(50),
+    homeowner CHAR(1)
+);
+
+-- Table to store information about returns:
+CREATE TABLE returns(
+    return_date DATE,
+    product_id INT NOT NULL,
+    store_id INT NOT NULL,
+    return_quantity INT,
+    FOREIGN KEY (product_id) REFERENCES products(product_id),
+    FOREIGN KEY (store_id) REFERENCES stores(store_id)
+);
+
+-- Table to store information about sales:
+CREATE TABLE sales(
+    order_date DATE NOT NULL,
+    stock_date DATE,
+    product_id INT,
+    customer_id INT,
+    store_id INT,
+    order_quantity INT,
+    FOREIGN KEY (store_id) REFERENCES stores(store_id),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
